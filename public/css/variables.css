@@ -1,0 +1,92 @@
+:root {
+  /* WhatsApp Brand Green Accents */
+  --wa-teal: #00a884;
+  --wa-teal-hover: #02906f;
+  --wa-teal-dark: #008069;
+  --wa-teal-light: #25d366;
+  --wa-green-check: #53bdeb;
+
+  /* Typography */
+  --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+  /* Transitions */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.25s ease;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(11, 20, 26, 0.08);
+  --shadow-md: 0 4px 12px rgba(11, 20, 26, 0.15);
+  --shadow-lg: 0 12px 28px rgba(11, 20, 26, 0.25);
+
+  /* Light Theme (Default) */
+  --bg-app: #eae6df;
+  --bg-sidebar: #ffffff;
+  --bg-header: #f0f2f5;
+  --bg-chat-header: #f0f2f5;
+  --bg-chat-body: #efeae2;
+  --bg-composer: #f0f2f5;
+  --bg-input: #ffffff;
+  --bg-hover: #f5f6f6;
+  --bg-active: #ebebeb;
+  --bg-rail: #f0f2f5;
+  --bg-modal: #ffffff;
+  --bg-dropdown: #ffffff;
+  --bg-message-in: #ffffff;
+  --bg-message-out: #d9fdd3;
+  --bg-badge: #25d366;
+  --bg-chip: #f0f2f5;
+  --bg-chip-active: #e7fce3;
+
+  --text-primary: #111b21;
+  --text-secondary: #667781;
+  --text-muted: #8696a0;
+  --text-light: #ffffff;
+  --text-link: #027eb5;
+  --text-chip-active: #008069;
+
+  --border-light: #e9edef;
+  --border-subtle: #f0f2f5;
+  --border-chat: #d1d7db;
+
+  --icon-color: #54656f;
+  --icon-hover: #111b21;
+
+  --chat-pattern-opacity: 0.4;
+}
+
+/* Dark Theme */
+[data-theme="dark"] {
+  --bg-app: #0c1317;
+  --bg-sidebar: #111b21;
+  --bg-header: #202c33;
+  --bg-chat-header: #202c33;
+  --bg-chat-body: #0b141a;
+  --bg-composer: #202c33;
+  --bg-input: #2a3942;
+  --bg-hover: #202c33;
+  --bg-active: #2a3942;
+  --bg-rail: #202c33;
+  --bg-modal: #222e35;
+  --bg-dropdown: #233138;
+  --bg-message-in: #202c33;
+  --bg-message-out: #005c4b;
+  --bg-badge: #00a884;
+  --bg-chip: #202c33;
+  --bg-chip-active: #0a332c;
+
+  --text-primary: #e9edef;
+  --text-secondary: #8696a0;
+  --text-muted: #667781;
+  --text-light: #ffffff;
+  --text-link: #53bdeb;
+  --text-chip-active: #00a884;
+
+  --border-light: #222d34;
+  --border-subtle: #202c33;
+  --border-chat: #222d34;
+
+  --icon-color: #aebac1;
+  --icon-hover: #e9edef;
+
+  --chat-pattern-opacity: 0.08;
+}

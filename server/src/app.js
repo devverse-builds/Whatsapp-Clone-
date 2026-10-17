@@ -76,8 +76,11 @@ app.use(async (req, res, next) => {
 });
 
 // Static directories
+const fs = require('fs');
 const uploadsDir = path.resolve(__dirname, '../../uploads');
-const clientDir = path.resolve(__dirname, '../../client');
+const clientDir = fs.existsSync(path.resolve(__dirname, '../../public'))
+  ? path.resolve(__dirname, '../../public')
+  : path.resolve(__dirname, '../../client');
 
 app.use('/uploads', express.static(uploadsDir));
 app.use(express.static(clientDir));

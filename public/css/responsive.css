@@ -1,0 +1,82 @@
+@media (max-width: 900px) {
+  #sidebar {
+    width: 340px;
+    min-width: 280px;
+  }
+  .chat-messages-container {
+    padding: 16px 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  #app {
+    flex-direction: column;
+  }
+
+  #main-container {
+    flex-direction: column-reverse;
+  }
+
+  /* Bottom Navigation Bar on Mobile */
+  #nav-rail {
+    width: 100%;
+    height: 56px;
+    flex-direction: row;
+    padding: 0 16px;
+    border-right: none;
+    border-top: 1px solid var(--border-light);
+  }
+
+  .rail-top, .rail-bottom {
+    flex-direction: row;
+    gap: 16px;
+    width: auto;
+  }
+
+  #sidebar {
+    width: 100%;
+    max-width: 100%;
+    flex: 1;
+    border-right: none;
+  }
+
+  /* When conversation is selected on mobile, full-screen takeover */
+  #chat-viewport {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 50;
+    display: none;
+  }
+
+  #chat-viewport.mobile-active {
+    display: flex;
+  }
+
+  .chat-back-btn {
+    display: flex;
+  }
+
+  .chat-messages-container {
+    padding: 12px 14px;
+  }
+
+  .message-bubble {
+    max-width: 85%;
+  }
+
+  .welcome-art {
+    max-width: 200px;
+  }
+
+  .welcome-title {
+    font-size: 20px;
+  }
+
+  .modal-window {
+    width: 95%;
+    max-height: 90vh;
+  }
+}

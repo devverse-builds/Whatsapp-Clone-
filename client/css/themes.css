@@ -1,0 +1,26 @@
+/* Theme transitions */
+body, #sidebar, #chat-viewport, .chat-header, .chat-composer-container, .modal-window, .dropdown-menu {
+  transition: background-color var(--transition-normal), border-color var(--transition-normal), color var(--transition-normal);
+}
+
+/* Custom wallpaper variants */
+.wallpaper-default {
+  background-color: var(--bg-chat-body);
+}
+
+.wallpaper-dark {
+  background-color: #0b141a !important;
+}
+
+.wallpaper-doodle {
+  background-image: radial-gradient(var(--wa-teal) 0.75px, transparent 0.75px) !important;
+  background-size: 16px 16px !important;
+}
+
+.wallpaper-solid-blue {
+  background: #112d32 !important;
+}
+
+.wallpaper-solid-green {
+  background: #0d2818 !important;
+}

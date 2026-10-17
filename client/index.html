@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>WhatsApp Web</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2300a884'><path d='M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2z'/></svg>">
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/reset.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/responsive.css">
+  <link rel="stylesheet" href="css/themes.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Connection Status Banner -->
+    <div id="connection-status-banner" style="display:none; position:absolute; top:0; left:0; width:100%; background:#ea4335; color:#fff; font-size:12px; font-weight:600; padding:4px; text-align:center; z-index:9999;">
+      Connecting to WhatsApp...
+    </div>
+
+    <!-- ======================================================================
+         AUTH SCREEN (When user is not logged in)
+         ====================================================================== -->
+    <div id="auth-container">
+      <div class="auth-card">
+        <div class="auth-header">
+          <svg class="auth-logo" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2zm0 18.15c-1.49 0-2.95-.4-4.22-1.15l-.3-.18-3.13.82.83-3.05-.2-.31a8.03 8.03 0 01-1.23-4.28c0-4.46 3.63-8.09 8.09-8.09 2.16 0 4.19.84 5.72 2.37 1.53 1.53 2.37 3.56 2.37 5.72 0 4.46-3.63 8.09-8.09 8.09z"/>
+          </svg>
+          <h1 class="auth-title">WhatsApp Web</h1>
+          <p class="auth-desc">Simple. Reliable. Private.</p>
+        </div>
+
+        <div class="auth-tabs">
+          <div id="tab-login" class="auth-tab active">Sign In</div>
+          <div id="tab-register" class="auth-tab">Register</div>
+        </div>
+
+        <div id="auth-alert" class="auth-alert"></div>
+
+        <!-- Sign In Form -->
+        <form id="form-login" class="auth-form">
+          <div class="form-group">
+            <label class="form-label" for="login-identifier">Username, Email, or Phone</label>
+            <input id="login-identifier" class="form-input" type="text" placeholder="Enter identifier" required autocomplete="username">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="login-password">Password</label>
+            <input id="login-password" class="form-input" type="password" placeholder="Enter password" required autocomplete="current-password">
+          </div>
+          <button id="btn-login-submit" type="submit" class="btn-primary">Sign In</button>
+        </form>
+
+        <!-- Register Form -->
+        <form id="form-register" class="auth-form" style="display: none;">
+          <div class="form-group">
+            <label class="form-label" for="reg-displayname">Full Name</label>
+            <input id="reg-displayname" class="form-input" type="text" placeholder="e.g. Alice Cooper" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="reg-username">Unique Username</label>
+            <input id="reg-username" class="form-input" type="text" placeholder="e.g. alice_cooper" required autocomplete="username">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="reg-email">Email (Optional)</label>
+            <input id="reg-email" class="form-input" type="email" placeholder="alice@example.com">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="reg-phone">Phone Number (Optional)</label>
+            <input id="reg-phone" class="form-input" type="tel" placeholder="+1234567890">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="reg-password">Password (Min 6 chars)</label>
+            <input id="reg-password" class="form-input" type="password" placeholder="Create secure password" required minlength="6" autocomplete="new-password">
+          </div>
+          <button id="btn-register-submit" type="submit" class="btn-primary">Create Account</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- ======================================================================
+         MAIN APP INTERFACE (Logged in)
+         ====================================================================== -->
+    <div id="main-container" style="display: none;">
+      <!-- 1. Left Navigation Rail -->
+      <nav id="nav-rail">
+        <div class="rail-top">
+          <!-- Chats -->
+          <button id="rail-chats-btn" class="rail-btn active" title="Chats">
+            <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/>
+            </svg>
+          </button>
+          <!-- Status / Stories -->
+          <button id="rail-status-btn" class="rail-btn" title="Status">
+            <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+            </svg>
+          </button>
+          <!-- New Group -->
+          <button id="btn-new-group" class="rail-btn" title="New Group">
+            <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M16.5 13c-1.2 0-3.07.34-4.5 1-1.43-.66-3.3-1-4.5-1C5.33 13 1 14.08 1 16.25V19h22v-2.75c0-2.17-4.33-3.25-6.5-3.25zm-9-2c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3zm9 0c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3z"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="rail-bottom">
+          <!-- Theme toggle -->
+          <button id="rail-theme-btn" class="rail-btn" title="Toggle theme">
+            <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-3.03 0-5.5-2.47-5.5-5.5 0-1.82.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/>
+            </svg>
+          </button>
+          <!-- Settings -->
+          <button id="rail-settings-btn" class="rail-btn" title="Settings">
+            <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+            </svg>
+          </button>
+          <!-- User Profile Avatar -->
+          <button id="rail-profile-btn" class="rail-btn" title="Profile">
+            <img id="rail-user-avatar" class="rail-avatar" src="" alt="Profile">
+          </button>
+          <!-- Logout -->
+          <button id="btn-logout" class="rail-btn" title="Sign Out">
+            <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M10.09 15.59L11.5 17l5-5-5-5-1.41 1.41L12.67 11H3v2h9.67l-2.58 2.59zM19 3H5c-1.11 0-2 .9-2 2v4h2V5h14v14H5v-4H3v4c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
+            </svg>
+          </button>
+        </div>
+      </nav>
+
+      <!-- 2. Chat Sidebar -->
+      <aside id="sidebar">
+        <!-- Sidebar Header -->
+        <div class="sidebar-header">
+          <h2 class="sidebar-title">Chats</h2>
+          <div class="sidebar-actions">
+            <!-- New Chat -->
+            <button id="btn-new-chat" class="sidebar-action-btn" title="New Chat">
+              <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Search bar & filter chips -->
+        <div class="sidebar-search-container">
+          <div class="search-box-wrapper">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+            </svg>
+            <input id="sidebar-search-input" class="search-input" type="text" placeholder="Search or start new chat">
+            <button id="sidebar-search-clear" class="search-clear-btn" title="Clear search">✕</button>
+          </div>
+
+          <div class="filter-chips">
+            <button class="filter-chip active" data-filter="all">All</button>
+            <button class="filter-chip" data-filter="unread">Unread</button>
+            <button class="filter-chip" data-filter="groups">Groups</button>
+          </div>
+        </div>
+
+        <!-- Scrollable Conversations List -->
+        <div id="conversations-list" class="conversations-list">
+          <!-- Dynamically populated via chats.js -->
+        </div>
+      </aside>
+
+      <!-- 3. Main Conversation Viewport -->
+      <main id="chat-viewport">
+        <!-- Welcome Screen (When no chat is active) -->
+        <section id="welcome-screen">
+          <svg class="welcome-art" viewBox="0 0 300 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="150" cy="100" r="80" fill="var(--wa-teal)" fill-opacity="0.12"/>
+            <rect x="70" y="45" width="160" height="110" rx="10" stroke="var(--wa-teal)" stroke-width="3" fill="var(--bg-modal)"/>
+            <rect x="85" y="60" width="80" height="10" rx="4" fill="var(--wa-teal)"/>
+            <rect x="85" y="80" width="130" height="8" rx="4" fill="var(--text-muted)" fill-opacity="0.3"/>
+            <rect x="85" y="96" width="100" height="8" rx="4" fill="var(--text-muted)" fill-opacity="0.3"/>
+            <path d="M120 170L150 155L180 170" stroke="var(--wa-teal)" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+          <h2 class="welcome-title">WhatsApp Web</h2>
+          <p class="welcome-subtitle">
+            Send and receive messages with your contacts in real time.<br>
+            Supports voice notes, media attachments, groups, stories, and WebRTC calls.
+          </p>
+          <div class="welcome-footer">
+            <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+            </svg>
+            End-to-end authorized and encrypted transport
+          </div>
+        </section>
+
+        <!-- Active Conversation Panel -->
+        <section id="active-chat-panel">
+          <!-- Chat Header -->
+          <header class="chat-header">
+            <div class="chat-header-info">
+              <!-- Back button on mobile -->
+              <button id="chat-back-btn" class="chat-back-btn" title="Back">
+                <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+                </svg>
+              </button>
+              <img id="chat-header-avatar" class="chat-header-avatar" src="" alt="Avatar">
+              <div class="chat-header-text">
+                <span id="chat-header-name" class="chat-header-name">Contact Name</span>
+                <span id="chat-header-status" class="chat-header-status">offline</span>
+              </div>
+            </div>
+
+            <div class="chat-header-actions">
+              <!-- Audio Call -->
+              <button id="btn-header-call-audio" class="chat-action-btn" title="Voice Call">
+                <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+                </svg>
+              </button>
+              <!-- Video Call -->
+              <button id="btn-header-call-video" class="chat-action-btn" title="Video Call">
+                <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
+                </svg>
+              </button>
+              <!-- Group Info -->
+              <button id="btn-group-info" class="chat-action-btn" title="Info">
+                <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+                </svg>
+              </button>
+            </div>
+          </header>
+
+          <!-- Messages Container -->
+          <div id="chat-messages-container" class="chat-messages-container">
+            <!-- Messages rendered by messages.js -->
+          </div>
+
+          <!-- Composer Area -->
+          <footer class="chat-composer-container">
+            <!-- Quoted reply preview banner -->
+            <div id="reply-preview-bar" class="reply-preview-bar">
+              <div class="reply-preview-content">
+                <span id="reply-preview-sender" class="reply-preview-sender">Author</span>
+                <span id="reply-preview-text" class="reply-preview-text">Replying snippet...</span>
+              </div>
+              <button id="reply-preview-cancel" class="reply-preview-cancel" title="Cancel reply">✕</button>
+            </div>
+
+            <!-- Normal input bar -->
+            <div id="composer-normal-bar" class="composer-main-bar">
+              <!-- Emoji button -->
+              <button id="btn-composer-emoji" class="composer-action-btn" title="Emojis">
+                <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/>
+                </svg>
+              </button>
+
+              <!-- Attachment button -->
+              <button id="btn-attach-menu" class="composer-action-btn" title="Attach">
+                <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V5c0-2.21-1.79-4-4-4S7 2.79 7 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z"/>
+                </svg>
+              </button>
+
+              <!-- Attachment popup menu -->
+              <div id="attachment-menu-popup" class="attachment-menu-popup">
+                <label class="attachment-item-btn" style="cursor: pointer;">
+                  <div class="attach-icon-circle" style="background:#ac44cf;">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+                  </div>
+                  Photos & Videos
+                  <input id="input-attach-photo" type="file" accept="image/*,video/*" style="display:none;">
+                </label>
+
+                <label class="attachment-item-btn" style="cursor: pointer;">
+                  <div class="attach-icon-circle" style="background:#5f66cd;">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                  </div>
+                  Document
+                  <input id="input-attach-doc" type="file" style="display:none;">
+                </label>
+              </div>
+
+              <!-- Message input -->
+              <div class="composer-input-wrapper">
+                <textarea id="composer-textarea" class="composer-textarea" rows="1" placeholder="Type a message"></textarea>
+              </div>
+
+              <!-- Voice record button -->
+              <button id="btn-composer-voice" class="composer-action-btn" title="Voice Message">
+                <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.91-3c-.49 0-.9.36-.98.85C16.52 14.2 14.47 16 12 16s-4.52-1.8-4.93-4.15c-.08-.49-.49-.85-.98-.85-.61 0-1.09.54-1 1.14.49 3 2.89 5.35 5.91 5.78V20c0 .55.45 1 1 1s1-.45 1-1v-2.08c3.02-.43 5.42-2.78 5.91-5.78.1-.6-.39-1.14-1-1.14z"/>
+                </svg>
+              </button>
+
+              <!-- Send button -->
+              <button id="btn-composer-send" class="composer-action-btn" title="Send" style="color: var(--wa-teal);">
+                <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                </svg>
+              </button>
+            </div>
+
+            <!-- Voice recording overlay -->
+            <div id="composer-recording-bar" class="voice-recording-overlay">
+              <div class="recording-dot"></div>
+              <span id="voice-recording-timer" class="recording-timer">0:00</span>
+              <button id="btn-voice-cancel" class="recording-cancel-btn">Cancel</button>
+              <button id="btn-voice-send" class="recording-send-btn" title="Send Voice Note">
+                <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+              </button>
+            </div>
+          </footer>
+        </section>
+      </main>
+    </div>
+
+    <!-- ======================================================================
+         MODALS AND OVERLAYS
+         ====================================================================== -->
+
+    <!-- New Chat Modal -->
+    <div id="modal-new-chat" class="modal-backdrop">
+      <div class="modal-window">
+        <div class="modal-header">
+          <h3 class="modal-title">New Chat</h3>
+          <button id="btn-close-new-chat" class="modal-close-btn">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="search-box-wrapper">
+            <input id="new-chat-search-input" class="search-input" type="text" placeholder="Search contacts by name or username">
+          </div>
+          <div id="new-chat-user-list" style="display:flex; flex-direction:column; gap:4px; max-height:400px; overflow-y:auto;">
+            <!-- Populated by contacts.js -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- New Group Modal -->
+    <div id="modal-new-group" class="modal-backdrop">
+      <div class="modal-window">
+        <div class="modal-header">
+          <h3 class="modal-title">Create Group</h3>
+          <button id="btn-close-new-group" class="modal-close-btn">✕</button>
+        </div>
+        <div class="modal-body">
+          <form id="form-create-group" style="display:flex; flex-direction:column; gap:14px;">
+            <div class="form-group">
+              <label class="form-label">Group Subject</label>
+              <input id="group-name-input" class="form-input" type="text" placeholder="Group name" required maxlength="100">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Description (Optional)</label>
+              <input id="group-desc-input" class="form-input" type="text" placeholder="Group description" maxlength="500">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Select Members</label>
+              <div id="group-member-selection-list" style="max-height:220px; overflow-y:auto; border:1px solid var(--border-subtle); border-radius:8px; padding:6px;">
+                <!-- User checkboxes -->
+              </div>
+            </div>
+            <button id="btn-submit-create-group" type="submit" class="btn-primary">Create Group</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Group Info Modal -->
+    <div id="modal-group-info" class="modal-backdrop">
+      <div class="modal-window">
+        <div class="modal-header">
+          <h3 id="group-info-name" class="modal-title">Group Info</h3>
+          <button id="btn-close-group-info" class="modal-close-btn">✕</button>
+        </div>
+        <div class="modal-body">
+          <p id="group-info-desc" style="color:var(--text-secondary); font-size:13px;"></p>
+          <div id="group-info-count" style="font-weight:600; font-size:14px; margin-top:10px;">Participants</div>
+          <div id="group-info-members-list" style="max-height:260px; overflow-y:auto; display:flex; flex-direction:column; gap:4px;"></div>
+          <button id="btn-leave-group" class="filter-chip" style="color:#ea4335; border:1px solid #ea4335; margin-top:12px; align-self:flex-start;">Leave Group</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="modal-settings" class="modal-backdrop">
+      <div class="modal-window" style="max-width:560px;">
+        <div class="modal-header">
+          <h3 class="modal-title">Settings & Profile</h3>
+          <button id="btn-close-settings" class="modal-close-btn">✕</button>
+        </div>
+        <div class="modal-body">
+          <!-- Profile Section -->
+          <h4 style="font-size:15px; font-weight:600; color:var(--wa-teal);">My Profile</h4>
+          <form id="form-edit-profile" style="display:flex; flex-direction:column; gap:12px;">
+            <div class="form-group">
+              <label class="form-label">Your Name</label>
+              <input id="setting-display-name" class="form-input" type="text" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">About / Bio</label>
+              <input id="setting-about" class="form-input" type="text" maxlength="140">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Avatar URL</label>
+              <input id="setting-avatar" class="form-input" type="url" placeholder="https://example.com/avatar.jpg">
+            </div>
+            <button type="submit" class="filter-chip active" style="align-self:flex-start;">Save Profile</button>
+          </form>
+
+          <hr style="border:none; border-top:1px solid var(--border-light); margin:8px 0;">
+
+          <!-- Privacy Section -->
+          <h4 style="font-size:15px; font-weight:600; color:var(--wa-teal);">Privacy Controls</h4>
+          <form id="form-edit-privacy" style="display:flex; flex-direction:column; gap:12px;">
+            <div class="form-group">
+              <label class="form-label">Last Seen & Online</label>
+              <select id="privacy-last-seen" class="form-input">
+                <option value="everyone">Everyone</option>
+                <option value="contacts">My Contacts</option>
+                <option value="nobody">Nobody</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Profile Photo</label>
+              <select id="privacy-profile-photo" class="form-input">
+                <option value="everyone">Everyone</option>
+                <option value="contacts">My Contacts</option>
+                <option value="nobody">Nobody</option>
+              </select>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <input id="privacy-read-receipts" type="checkbox" style="accent-color:var(--wa-teal); width:18px; height:18px;">
+              <label for="privacy-read-receipts" style="font-size:13px; color:var(--text-primary); cursor:pointer;">Send Read Receipts (Blue Ticks)</label>
+            </div>
+            <button type="submit" class="filter-chip active" style="align-self:flex-start;">Save Privacy</button>
+          </form>
+
+          <hr style="border:none; border-top:1px solid var(--border-light); margin:8px 0;">
+
+          <!-- Appearance -->
+          <h4 style="font-size:15px; font-weight:600; color:var(--wa-teal);">Appearance & Wallpaper</h4>
+          <div style="display:flex; gap:14px;">
+            <div class="form-group" style="flex:1;">
+              <label class="form-label">Theme</label>
+              <select id="setting-theme-select" class="form-input">
+                <option value="dark">Dark Theme</option>
+                <option value="light">Light Theme</option>
+              </select>
+            </div>
+            <div class="form-group" style="flex:1;">
+              <label class="form-label">Chat Wallpaper</label>
+              <select id="setting-wallpaper-select" class="form-input">
+                <option value="default">Default WhatsApp</option>
+                <option value="dark">Solid Dark</option>
+                <option value="doodle">WhatsApp Doodle</option>
+                <option value="solid-blue">Deep Blue</option>
+                <option value="solid-green">Deep Green</option>
+              </select>
+            </div>
+          </div>
+
+          <hr style="border:none; border-top:1px solid var(--border-light); margin:8px 0;">
+
+          <!-- Blocked Contacts -->
+          <h4 style="font-size:15px; font-weight:600; color:var(--wa-teal);">Blocked Contacts</h4>
+          <div id="settings-blocked-list" style="display:flex; flex-direction:column; gap:6px;"></div>
+
+          <hr style="border:none; border-top:1px solid var(--border-light); margin:8px 0;">
+
+          <!-- Security -->
+          <h4 style="font-size:15px; font-weight:600; color:var(--wa-teal);">Security</h4>
+          <form id="form-change-password" style="display:flex; flex-direction:column; gap:12px;">
+            <div class="form-group">
+              <label class="form-label">Current Password</label>
+              <input id="input-current-password" class="form-input" type="password" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">New Password</label>
+              <input id="input-new-password" class="form-input" type="password" required minlength="6">
+            </div>
+            <button type="submit" class="filter-chip" style="align-self:flex-start;">Update Password</button>
+          </form>
+
+          <hr style="border:none; border-top:1px solid var(--border-light); margin:8px 0;">
+          <button id="btn-delete-account" class="filter-chip" style="color:#ea4335; border:1px solid #ea4335; align-self:flex-start;">Delete Account</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status (Stories) Modal -->
+    <div id="modal-status" class="modal-backdrop">
+      <div class="modal-window">
+        <div class="modal-header">
+          <h3 class="modal-title">Status Updates</h3>
+          <button id="btn-close-status" class="modal-close-btn">✕</button>
+        </div>
+        <div class="modal-body">
+          <div style="display:flex; gap:10px; margin-bottom:12px;">
+            <button id="btn-add-text-status" class="btn-primary" style="flex:1; margin-top:0; font-size:13px;">✏️ Text Status</button>
+            <label class="btn-primary" style="flex:1; margin-top:0; font-size:13px; text-align:center; cursor:pointer;">
+              📷 Photo Status
+              <input id="input-status-image" type="file" accept="image/*" style="display:none;">
+            </label>
+          </div>
+
+          <div style="font-weight:600; font-size:14px; margin-bottom:6px;">My Status</div>
+          <div id="my-status-container"></div>
+
+          <div style="font-weight:600; font-size:14px; margin:16px 0 6px;">Recent Updates</div>
+          <div id="contact-statuses-list" style="display:flex; flex-direction:column; gap:4px; max-height:240px; overflow-y:auto;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Create Text Status Modal -->
+    <div id="modal-create-text-status" class="modal-backdrop">
+      <div class="modal-window">
+        <div class="modal-header">
+          <h3 class="modal-title">Type a Status</h3>
+          <button id="btn-close-text-status" class="modal-close-btn">✕</button>
+        </div>
+        <div class="modal-body">
+          <textarea id="text-status-input" class="form-input" rows="4" placeholder="What's on your mind?" style="resize:none; font-size:16px;"></textarea>
+          <div class="form-group">
+            <label class="form-label">Background Color</label>
+            <select id="text-status-color" class="form-input">
+              <option value="#075E54">WhatsApp Teal</option>
+              <option value="#1F2C34">Midnight</option>
+              <option value="#6B3074">Purple</option>
+              <option value="#A62C2C">Burgundy</option>
+              <option value="#203562">Navy Blue</option>
+              <option value="#D45A25">Amber</option>
+            </select>
+          </div>
+          <button id="btn-submit-text-status" class="btn-primary">Post Status</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Full-screen Story Viewer -->
+    <div id="modal-story-viewer" class="modal-backdrop">
+      <div style="position:relative; width:100%; max-width:440px; height:85vh; display:flex; flex-direction:column; background:#000; border-radius:12px; overflow:hidden;">
+        <!-- Top progress bars -->
+        <div id="story-viewer-progress-bars" style="display:flex; gap:4px; padding:12px 16px; position:absolute; top:0; left:0; width:100%; z-index:10;"></div>
+        <!-- Author info -->
+        <div style="position:absolute; top:28px; left:16px; right:16px; display:flex; justify-content:space-between; align-items:center; z-index:10;">
+          <div id="story-viewer-author" style="color:#fff;"></div>
+          <button id="btn-close-story-viewer" style="color:#fff; font-size:20px; width:32px; height:32px; border-radius:50%; background:rgba(0,0,0,0.4);">✕</button>
+        </div>
+        <!-- Story content stage -->
+        <div id="story-viewer-stage" style="flex:1; display:flex; align-items:center; justify-content:center; position:relative;"></div>
+        <!-- Viewers count on bottom -->
+        <div id="story-viewer-viewers" style="position:absolute; bottom:16px; left:0; width:100%; text-align:center; color:#fff; font-size:12px; z-index:10; background:rgba(0,0,0,0.5); padding:6px 0;"></div>
+      </div>
+    </div>
+
+    <!-- WebRTC Calling Overlay -->
+    <div id="modal-call-overlay" class="call-overlay-modal">
+      <div class="call-peer-info">
+        <img id="call-peer-avatar" class="call-peer-avatar" src="" alt="Peer">
+        <h2 id="call-peer-name" class="call-peer-name">Contact</h2>
+        <span id="call-status-label" class="call-status-label">Calling...</span>
+      </div>
+
+      <div id="call-video-stage" class="call-video-stage" style="display:none;">
+        <video id="call-remote-video" class="call-remote-video" autoplay playsinline></video>
+        <video id="call-local-video" class="call-local-video" autoplay playsinline muted></video>
+      </div>
+
+      <div class="call-controls-bar">
+        <!-- Accept button -->
+        <button id="btn-call-accept" class="call-btn call-btn-accept" title="Accept Call">
+          <svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24"><path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 00-1.01.24l-1.57 1.97c-2.83-1.44-5.15-3.75-6.59-6.59l1.97-1.57c.28-.28.37-.68.25-1.02A11.36 11.36 0 019 5.31c0-.55-.45-1-1-1H4.5c-.55 0-1 .45-1 1 0 9.39 7.61 17 17 17 .55 0 1-.45 1-1v-3.5c0-.55-.45-1-.99-1.01z"/></svg>
+        </button>
+        <!-- Toggle microphone -->
+        <button id="btn-call-mute" class="call-btn call-btn-toggle" title="Mute Mic">
+          <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.91-3c-.49 0-.9.36-.98.85C16.52 14.2 14.47 16 12 16s-4.52-1.8-4.93-4.15c-.08-.49-.49-.85-.98-.85-.61 0-1.09.54-1 1.14.49 3 2.89 5.35 5.91 5.78V20c0 .55.45 1 1 1s1-.45 1-1v-2.08c3.02-.43 5.42-2.78 5.91-5.78.1-.6-.39-1.14-1-1.14z"/></svg>
+        </button>
+        <!-- Toggle camera -->
+        <button id="btn-call-toggle-video" class="call-btn call-btn-toggle" title="Toggle Camera">
+          <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+        </button>
+        <!-- Reject button (Incoming) -->
+        <button id="btn-call-reject" class="call-btn call-btn-hangup" title="Decline Call">
+          <svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24"><path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08a.956.956 0 010-1.36C3.26 8.84 7.39 7 12 7c4.61 0 8.74 1.84 11.71 4.72.37.38.37.98 0 1.36l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.11-.7-.28-.79-.74-1.69-1.36-2.67-1.85-.33-.16-.56-.5-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z"/></svg>
+        </button>
+        <!-- Hangup button (Active / Calling) -->
+        <button id="btn-call-hangup" class="call-btn call-btn-hangup" title="End Call">
+          <svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24"><path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08a.956.956 0 010-1.36C3.26 8.84 7.39 7 12 7c4.61 0 8.74 1.84 11.71 4.72.37.38.37.98 0 1.36l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.11-.7-.28-.79-.74-1.69-1.36-2.67-1.85-.33-.16-.56-.5-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Media Lightbox Modal -->
+    <div id="modal-media-lightbox" class="modal-backdrop">
+      <div style="position:relative; max-width:90vw; max-height:90vh; display:flex; flex-direction:column; align-items:center;">
+        <div style="display:flex; justify-content:space-between; align-items:center; width:100%; color:#fff; padding-bottom:10px;">
+          <span id="lightbox-title" style="font-weight:600; font-size:15px;">Image Preview</span>
+          <div style="display:flex; gap:12px;">
+            <a id="lightbox-download" class="rail-btn" title="Download">
+              <svg width="22" height="22" fill="#fff" viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/></svg>
+            </a>
+            <button id="btn-close-lightbox" class="modal-close-btn" style="color:#fff;">✕</button>
+          </div>
+        </div>
+        <img id="lightbox-image" src="" style="max-width:100%; max-height:80vh; object-fit:contain; border-radius:8px;">
+      </div>
+    </div>
+
+    <!-- Message Context Action Menu Dropdown -->
+    <div id="message-dropdown-menu" class="dropdown-menu"></div>
+  </div>
+
+  <!-- Socket.IO Client Library -->
+  <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+
+  <!-- Modular Scripts -->
+  <script src="js/utils.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/socket.js"></script>
+  <script src="js/notifications.js"></script>
+  <script src="js/settings.js"></script>
+  <script src="js/contacts.js"></script>
+  <script src="js/groups.js"></script>
+  <script src="js/media.js"></script>
+  <script src="js/webrtc.js"></script>
+  <script src="js/status.js"></script>
+  <script src="js/messages.js"></script>
+  <script src="js/chats.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -69,7 +69,16 @@ app.use(async (req, res, next) => {
       await connectDB();
     } catch (err) {
       console.error('[DB Middleware] Connection failed:', err.message);
-      return res.status(500).json({ success: false, message: 'Database connection error' });
+      let userHint = err.message;
+      if (!process.env.MONGODB_URI) {
+        userHint = 'MONGODB_URI is not set in Vercel Environment Variables. Please add MONGODB_URI in Vercel Project Settings.';
+      } else if (process.env.MONGODB_URI.includes('<') || process.env.MONGODB_URI.includes('>')) {
+        userHint = 'MONGODB_URI contains "<" or ">" placeholder brackets. Replace with actual credentials (e.g. whatsapp-admin).';
+      }
+      return res.status(500).json({
+        success: false,
+        message: `Database connection error: ${userHint}`
+      });
     }
   }
   next();
@@ -85,12 +94,34 @@ const clientDir = fs.existsSync(path.resolve(__dirname, '../../public'))
 app.use('/uploads', express.static(uploadsDir));
 app.use(express.static(clientDir));
 
-// Health check
-app.get('/api/health', (req, res) => {
-  res.status(200).json({
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime()
+// Health check with DB status
+app.get('/api/health', async (req, res) => {
+  let dbStatus = 'disconnected';
+  let dbError = null;
+  const rawUri = process.env.MONGODB_URI || '';
+  const maskedUri = rawUri ? rawUri.replace(/:([^@]+)@/, ':****@') : 'NOT_SET (falling back to localhost)';
+
+  try {
+    if (mongoose.connection.readyState !== 1) {
+      await connectDB();
+    }
+    dbStatus = 'connected';
+  } catch (err) {
+    dbStatus = 'error';
+    dbError = err.message;
+  }
+
+  res.status(dbStatus === 'connected' ? 200 : 500).json({
+    status: dbStatus === 'connected' ? 'ok' : 'error',
+    database: {
+      status: dbStatus,
+      uri: maskedUri,
+      hasAngleBrackets: rawUri.includes('<') || rawUri.includes('>'),
+      error: dbError,
+      readyState: mongoose.connection.readyState
+    },
+    env: process.env.NODE_ENV,
+    timestamp: new Date().toISOString()
   });
 });
 

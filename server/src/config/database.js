@@ -7,7 +7,11 @@ if (!cached) {
 }
 
 const connectDB = async () => {
-  const mongoUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/whatsapp_clone';
+  let mongoUri = (process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/whatsapp_clone').trim();
+  // Strip enclosing quotes if accidentally pasted in Vercel UI
+  if ((mongoUri.startsWith('"') && mongoUri.endsWith('"')) || (mongoUri.startsWith("'") && mongoUri.endsWith("'"))) {
+    mongoUri = mongoUri.slice(1, -1).trim();
+  }
 
   if (cached.conn && mongoose.connection.readyState === 1) {
     return cached.conn;
@@ -17,7 +21,8 @@ const connectDB = async () => {
     const opts = {
       bufferCommands: false,
       maxPoolSize: 10,
-      serverSelectionTimeoutMS: 5000
+      serverSelectionTimeoutMS: 15000,
+      connectTimeoutMS: 15000
     };
 
     cached.promise = mongoose.connect(mongoUri, opts).then((mongooseInstance) => {

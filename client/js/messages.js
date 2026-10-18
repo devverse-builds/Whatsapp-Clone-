@@ -34,6 +34,13 @@ const Messages = {
         this.autoResizeTextarea(textarea);
         this.handleTyping();
       });
+
+      // On mobile devices, scroll to bottom when keyboard appears
+      textarea.addEventListener('focus', () => {
+        setTimeout(() => {
+          this.scrollToBottom();
+        }, 320);
+      });
     }
 
     if (sendBtn) {

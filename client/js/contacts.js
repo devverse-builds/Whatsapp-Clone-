@@ -15,15 +15,22 @@ const Contacts = {
     const closeNewChatBtn = document.getElementById('btn-close-new-chat');
     const searchInput = document.getElementById('new-chat-search-input');
 
+    const mobileFab = document.getElementById('mobile-new-chat-fab');
+    const openNewChat = () => {
+      newChatModal.classList.add('active');
+      if (searchInput) {
+        searchInput.value = '';
+        searchInput.focus();
+      }
+      this.searchUsers('');
+    };
+
     if (newChatBtn && newChatModal) {
-      newChatBtn.addEventListener('click', () => {
-        newChatModal.classList.add('active');
-        if (searchInput) {
-          searchInput.value = '';
-          searchInput.focus();
-        }
-        this.searchUsers('');
-      });
+      newChatBtn.addEventListener('click', openNewChat);
+    }
+
+    if (mobileFab && newChatModal) {
+      mobileFab.addEventListener('click', openNewChat);
     }
 
     if (closeNewChatBtn && newChatModal) {

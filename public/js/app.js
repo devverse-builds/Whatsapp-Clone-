@@ -86,17 +86,22 @@ const App = {
         emojiPicker.style.cssText = `
           position: absolute;
           bottom: 64px;
-          left: 16px;
+          left: 12px;
+          right: 12px;
+          max-width: 380px;
+          margin: 0 auto;
           background: var(--bg-dropdown);
           box-shadow: var(--shadow-md);
-          border-radius: 12px;
-          padding: 8px 12px;
+          border-radius: 16px;
+          padding: 10px 14px;
           display: none;
           gap: 8px;
-          font-size: 20px;
+          font-size: 22px;
           z-index: 100;
           cursor: pointer;
           user-select: none;
+          justify-content: center;
+          flex-wrap: wrap;
         `;
 
         emojis.forEach((emoji) => {

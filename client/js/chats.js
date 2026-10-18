@@ -51,13 +51,34 @@ const Chats = {
     const backBtn = document.getElementById('chat-back-btn');
     if (backBtn) {
       backBtn.addEventListener('click', () => {
-        const viewport = document.getElementById('chat-viewport');
-        if (viewport) {
-          viewport.classList.remove('mobile-active');
+        if (window.history.state && window.history.state.inChat) {
+          window.history.back();
+        } else {
+          this.closeActiveChat();
         }
-        this.activeConversation = null;
-        document.querySelectorAll('.conversation-item').forEach((i) => i.classList.remove('active'));
       });
+    }
+
+    // Hardware / browser back button on mobile
+    window.addEventListener('popstate', (e) => {
+      this.closeActiveChat();
+    });
+  },
+
+  closeActiveChat() {
+    const viewport = document.getElementById('chat-viewport');
+    if (viewport) {
+      viewport.classList.remove('mobile-active');
+    }
+    this.activeConversation = null;
+    document.querySelectorAll('.conversation-item').forEach((i) => i.classList.remove('active'));
+    const welcome = document.getElementById('welcome-screen');
+    const panel = document.getElementById('active-chat-panel');
+    if (welcome && window.innerWidth > 768) {
+      welcome.style.display = 'flex';
+    }
+    if (panel) {
+      panel.classList.remove('active');
     }
   },
 
@@ -236,10 +257,13 @@ const Chats = {
       el.classList.toggle('active', el.dataset.id === conv._id);
     });
 
-    // Mobile slide in
+    // Mobile slide in & history entry for mobile back button
     const viewport = document.getElementById('chat-viewport');
     if (viewport) {
       viewport.classList.add('mobile-active');
+      if (window.innerWidth <= 768) {
+        window.history.pushState({ inChat: true, convId: conv._id }, '');
+      }
     }
 
     // Join socket room

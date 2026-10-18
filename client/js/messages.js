@@ -394,6 +394,12 @@ const Messages = {
     this.renderMessages();
     this.scrollToBottom();
 
+    // Stop typing indicator immediately and play sent sound
+    this.stopTyping();
+    if (window.Notifications) {
+      window.Notifications.playSentSound();
+    }
+
     // Send via socket with fallback to REST API
     try {
       const sent = await SocketClient.sendMessage({
@@ -434,6 +440,9 @@ const Messages = {
 
   handleNewIncomingMessage(message) {
     if (this.currentConversation && message.conversationId === this.currentConversation._id) {
+      // Hide typing bubble as new message has arrived
+      this.toggleTypingBubble(false);
+
       // Avoid duplicate rendering
       const exists = this.messages.some(
         (m) => m._id === message._id || (message.clientMessageId && m.clientMessageId === message.clientMessageId)
@@ -442,7 +451,13 @@ const Messages = {
       if (!exists) {
         this.messages.push(message);
         this.renderMessages();
-        this.scrollToBottom();
+        this.scrollToBottom(true);
+
+        // Play pleasant chime for incoming messages from others
+        const senderId = message.senderId?._id || message.senderId;
+        if (senderId !== Auth.currentUser?._id && window.Notifications) {
+          window.Notifications.playChime();
+        }
 
         // Send delivery and read receipts
         SocketClient.sendDeliveredReceipt(message._id, message.conversationId);
@@ -516,17 +531,58 @@ const Messages = {
     const { conversationId, userId, displayName, isTyping } = data;
     if (this.currentConversation && this.currentConversation._id === conversationId) {
       if (userId !== Auth.currentUser?._id) {
+        // 1. Update Header Status with animated dots
         const statusEl = document.getElementById('chat-header-status');
         if (statusEl) {
           if (isTyping) {
-            statusEl.textContent = this.currentConversation.type === 'group'
-              ? `${displayName} is typing...`
-              : 'typing...';
+            statusEl.innerHTML = `<span class="typing-header-text">${this.currentConversation.type === 'group' ? Utils.escapeHtml(displayName) + ' is ' : ''}typing<span class="animated-dots">...</span></span>`;
             statusEl.className = 'chat-header-status online';
           } else {
             this.updateHeaderPresence(this.currentConversation);
           }
         }
+
+        // 2. Toggle Live Typing Bubble in messages area
+        this.toggleTypingBubble(isTyping, displayName);
+      }
+    }
+  },
+
+  toggleTypingBubble(show, displayName) {
+    const container = document.getElementById('chat-messages-container');
+    if (!container) return;
+
+    let bubbleEl = document.getElementById('chat-live-typing-bubble');
+
+    if (show) {
+      if (!bubbleEl) {
+        bubbleEl = document.createElement('div');
+        bubbleEl.id = 'chat-live-typing-bubble';
+        bubbleEl.className = 'message-row incoming typing-bubble-row';
+        bubbleEl.innerHTML = `
+          <div class="message-bubble typing-bubble-content">
+            ${this.currentConversation?.type === 'group' ? `<div class="message-sender-name">${Utils.escapeHtml(displayName || 'User')}</div>` : ''}
+            <div class="typing-dots-wrapper">
+              <span class="typing-dot-jump"></span>
+              <span class="typing-dot-jump"></span>
+              <span class="typing-dot-jump"></span>
+            </div>
+          </div>
+        `;
+        container.appendChild(bubbleEl);
+      }
+      this.scrollToBottom(true);
+
+      // Auto-expire typing bubble if user stops typing without blur
+      clearTimeout(this._typingBubbleTimer);
+      this._typingBubbleTimer = setTimeout(() => {
+        this.toggleTypingBubble(false);
+      }, 3500);
+    } else {
+      clearTimeout(this._typingBubbleTimer);
+      if (bubbleEl) {
+        bubbleEl.classList.add('typing-fade-out');
+        setTimeout(() => bubbleEl.remove(), 180);
       }
     }
   },

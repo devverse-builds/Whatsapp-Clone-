@@ -210,28 +210,68 @@ const registerChatHandlers = (io, socket) => {
     }
   });
 
-  // Typing indicators
-  socket.on(SOCKET_EVENTS.TYPING_START, (data) => {
-    const { conversationId } = data || {};
-    if (conversationId) {
-      socket.to(`conversation:${conversationId}`).emit(SOCKET_EVENTS.TYPING_UPDATE, {
+  // Typing indicators with participant broadcasting & validation
+  socket.on(SOCKET_EVENTS.TYPING_START, async (data) => {
+    try {
+      const { conversationId } = data || {};
+      if (!conversationId || !isValidObjectId(conversationId)) return;
+
+      const conv = await Conversation.findOne({
+        _id: conversationId,
+        participants: userId
+      });
+      if (!conv) return;
+
+      const payload = {
         conversationId,
         userId,
         displayName: socket.user.displayName,
         isTyping: true
+      };
+
+      // Emit to active room
+      socket.to(`conversation:${conversationId}`).emit(SOCKET_EVENTS.TYPING_UPDATE, payload);
+
+      // Also emit to all participants' user channels for sidebar updates
+      conv.participants.forEach((p) => {
+        const pId = p.toString();
+        if (pId !== userId) {
+          io.to(`user:${pId}`).emit(SOCKET_EVENTS.TYPING_UPDATE, payload);
+        }
       });
+    } catch (err) {
+      console.error('[Socket] typing:start error:', err.message);
     }
   });
 
-  socket.on(SOCKET_EVENTS.TYPING_STOP, (data) => {
-    const { conversationId } = data || {};
-    if (conversationId) {
-      socket.to(`conversation:${conversationId}`).emit(SOCKET_EVENTS.TYPING_UPDATE, {
+  socket.on(SOCKET_EVENTS.TYPING_STOP, async (data) => {
+    try {
+      const { conversationId } = data || {};
+      if (!conversationId || !isValidObjectId(conversationId)) return;
+
+      const conv = await Conversation.findOne({
+        _id: conversationId,
+        participants: userId
+      });
+      if (!conv) return;
+
+      const payload = {
         conversationId,
         userId,
         displayName: socket.user.displayName,
         isTyping: false
+      };
+
+      socket.to(`conversation:${conversationId}`).emit(SOCKET_EVENTS.TYPING_UPDATE, payload);
+
+      conv.participants.forEach((p) => {
+        const pId = p.toString();
+        if (pId !== userId) {
+          io.to(`user:${pId}`).emit(SOCKET_EVENTS.TYPING_UPDATE, payload);
+        }
       });
+    } catch (err) {
+      console.error('[Socket] typing:stop error:', err.message);
     }
   });
 };

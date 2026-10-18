@@ -90,6 +90,10 @@ const Chats = {
     SocketClient.on('presence:update', (data) => {
       this.handlePresenceUpdated(data);
     });
+
+    SocketClient.on('typing:update', (data) => {
+      this.handleTypingUpdated(data);
+    });
   },
 
   async loadConversations() {
@@ -323,6 +327,40 @@ const Chats = {
     }
 
     this.render();
+  },
+
+  handleTypingUpdated(data) {
+    const { conversationId, userId, displayName, isTyping } = data;
+    if (userId === Auth.currentUser?._id) return;
+
+    const item = document.querySelector(`.conversation-item[data-id="${conversationId}"]`);
+    if (!item) return;
+
+    const snippetEl = item.querySelector('.conv-snippet');
+    if (!snippetEl) return;
+
+    if (!this._typingTimers) this._typingTimers = {};
+
+    if (isTyping) {
+      if (!snippetEl.dataset.originalHtml) {
+        snippetEl.dataset.originalHtml = snippetEl.innerHTML;
+      }
+      snippetEl.innerHTML = `<span class="conv-typing-status"><span class="typing-dots-mini"></span> typing...</span>`;
+      
+      clearTimeout(this._typingTimers[conversationId]);
+      this._typingTimers[conversationId] = setTimeout(() => {
+        if (snippetEl && snippetEl.dataset.originalHtml) {
+          snippetEl.innerHTML = snippetEl.dataset.originalHtml;
+          delete snippetEl.dataset.originalHtml;
+        }
+      }, 3500);
+    } else {
+      clearTimeout(this._typingTimers[conversationId]);
+      if (snippetEl && snippetEl.dataset.originalHtml) {
+        snippetEl.innerHTML = snippetEl.dataset.originalHtml;
+        delete snippetEl.dataset.originalHtml;
+      }
+    }
   }
 };
 

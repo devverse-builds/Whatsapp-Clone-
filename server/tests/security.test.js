@@ -54,4 +54,46 @@ describe('Security and Injection Defenses Tests', () => {
     const res1 = await request(app).get('/api/v1/conversations/invalid-id-1234');
     expect(res1.status).toBe(401);
   });
+
+  it('should temporarily lock account after 5 consecutive failed login attempts', async () => {
+    const username = `sec_lock_${ts}`;
+    await request(app)
+      .post('/api/v1/auth/register')
+      .send({
+        displayName: 'Lock Test',
+        username,
+        password: 'correct_password'
+      });
+
+    // 4 failed attempts
+    for (let i = 0; i < 4; i++) {
+      const failRes = await request(app)
+        .post('/api/v1/auth/login')
+        .send({ identifier: username, password: 'wrong_password' });
+      expect(failRes.status).toBe(401);
+    }
+
+    // 5th failed attempt triggers lockout
+    const lockRes = await request(app)
+      .post('/api/v1/auth/login')
+      .send({ identifier: username, password: 'wrong_password' });
+    expect(lockRes.status).toBe(401);
+    expect(lockRes.body.message).toMatch(/locked/i);
+
+    // 6th attempt should return 423 Locked even with right password
+    const lockedOutRes = await request(app)
+      .post('/api/v1/auth/login')
+      .send({ identifier: username, password: 'correct_password' });
+    expect(lockedOutRes.status).toBe(423);
+    expect(lockedOutRes.body.message).toMatch(/locked/i);
+  });
+
+  it('should block untrusted third-party CORS origins', async () => {
+    const res = await request(app)
+      .get('/api/health')
+      .set('Origin', 'https://malicious-hacker-site.com');
+
+    // CORS middleware produces an error or does not set Access-Control-Allow-Origin
+    expect(res.headers['access-control-allow-origin']).toBeUndefined();
+  });
 });

@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const Session = require('../models/Session');
+const bcrypt = require('bcryptjs');
 const {
   generateAccessToken,
   generateRefreshToken,
@@ -7,6 +8,9 @@ const {
   setAuthCookies,
   clearAuthCookies
 } = require('../utils/tokens');
+
+// Constant dummy hash to prevent timing attacks / username enumeration
+const DUMMY_HASH = '$2a$10$wT3WfI9r4B/Z6nE0wVlhjO4k4uE0d0E2tK2Q0E0d0E2tK2Q0E0d0E';
 
 const register = async (req, res, next) => {
   try {
@@ -100,9 +104,20 @@ const login = async (req, res, next) => {
     }).select('+passwordHash');
 
     if (!user) {
+      // Timing attack equalization: keep response duration indistinguishable
+      await bcrypt.compare(password, DUMMY_HASH);
       return res.status(401).json({
         success: false,
         message: 'Invalid username/email or password'
+      });
+    }
+
+    // Check brute-force account lockout
+    if (user.lockUntil && user.lockUntil > Date.now()) {
+      const remainingMinutes = Math.ceil((user.lockUntil.getTime() - Date.now()) / 60000);
+      return res.status(423).json({
+        success: false,
+        message: `Account temporarily locked due to excessive failed attempts. Please try again in ${remainingMinutes} minute${remainingMinutes > 1 ? 's' : ''}.`
       });
     }
 
@@ -115,9 +130,31 @@ const login = async (req, res, next) => {
 
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
+      const attempts = (user.failedLoginAttempts || 0) + 1;
+      const updateData = { failedLoginAttempts: attempts };
+      if (attempts >= 5) {
+        updateData.lockUntil = new Date(Date.now() + 15 * 60 * 1000);
+      }
+      await User.findByIdAndUpdate(user._id, updateData);
+
+      const remainingAttempts = Math.max(0, 5 - attempts);
+      const message = attempts >= 5
+        ? 'Account temporarily locked for 15 minutes due to too many failed attempts.'
+        : (attempts >= 3
+            ? `Invalid username/email or password. ${remainingAttempts} attempt(s) remaining before account lockout.`
+            : 'Invalid username/email or password');
+
       return res.status(401).json({
         success: false,
-        message: 'Invalid username/email or password'
+        message
+      });
+    }
+
+    // Reset failed attempts upon successful login
+    if (user.failedLoginAttempts > 0 || user.lockUntil) {
+      await User.findByIdAndUpdate(user._id, {
+        failedLoginAttempts: 0,
+        $unset: { lockUntil: 1 }
       });
     }
 

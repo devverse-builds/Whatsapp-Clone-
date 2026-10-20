@@ -579,6 +579,8 @@
         <video id="call-remote-video" class="call-remote-video" autoplay playsinline></video>
         <video id="call-local-video" class="call-local-video" autoplay playsinline muted></video>
       </div>
+      <!-- Dedicated remote audio element for mobile browser compatibility -->
+      <audio id="call-remote-audio" autoplay playsinline style="position:absolute; width:1px; height:1px; opacity:0; pointer-events:none;"></audio>
 
       <div class="call-controls-bar">
         <!-- Accept button -->

@@ -114,6 +114,13 @@ const userSchema = new mongoose.Schema(
       type: String,
       enum: ['active', 'suspended', 'deleted'],
       default: 'active'
+    },
+    failedLoginAttempts: {
+      type: Number,
+      default: 0
+    },
+    lockUntil: {
+      type: Date
     }
   },
   {

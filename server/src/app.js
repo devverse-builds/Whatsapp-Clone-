@@ -14,6 +14,7 @@ const messageRoutes = require('./routes/messageRoutes');
 const groupRoutes = require('./routes/groupRoutes');
 const mediaRoutes = require('./routes/mediaRoutes');
 const statusRoutes = require('./routes/statusRoutes');
+const { apiLimiter } = require('./middleware/rateLimiter');
 
 const app = express();
 
@@ -36,16 +37,28 @@ app.use(
   })
 );
 
-// CORS
+// Strict CORS Origin Validation
 const clientOrigin = process.env.CLIENT_ORIGIN || 'http://localhost:5000';
+const extraOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim())
+  : [];
+
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true; // Direct, same-origin, mobile webview
+  if (origin === clientOrigin) return true;
+  if (/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) return true;
+  if (/^https:\/\/[a-zA-Z0-9-]+\.vercel\.app$/.test(origin)) return true;
+  if (extraOrigins.includes(origin)) return true;
+  return false;
+};
+
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps, curl, or same-origin)
-      if (!origin || origin === clientOrigin || origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1')) {
+      if (isAllowedOrigin(origin)) {
         callback(null, true);
       } else {
-        callback(null, true); // Dev-friendly fallback
+        callback(new Error(`CORS blocked: Origin ${origin} not permitted`));
       }
     },
     credentials: true,
@@ -54,10 +67,32 @@ app.use(
   })
 );
 
-// Body parsers
+// Body parsers with size limit
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
+
+// Recursive NoSQL Injection Sanitizer: strips keys starting with $ or containing .
+const sanitizeNoSQL = (obj) => {
+  if (!obj || typeof obj !== 'object') return;
+  for (const key of Object.keys(obj)) {
+    if (key.startsWith('$') || key.includes('.')) {
+      delete obj[key];
+    } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+      sanitizeNoSQL(obj[key]);
+    }
+  }
+};
+
+app.use((req, res, next) => {
+  if (req.body) sanitizeNoSQL(req.body);
+  if (req.query) sanitizeNoSQL(req.query);
+  if (req.params) sanitizeNoSQL(req.params);
+  next();
+});
+
+// General API rate limiter
+app.use('/api/', apiLimiter);
 
 // Serverless DB connection middleware (ensures connection on Vercel)
 const mongoose = require('mongoose');

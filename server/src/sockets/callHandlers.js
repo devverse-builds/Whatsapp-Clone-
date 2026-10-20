@@ -23,8 +23,20 @@ const registerCallHandlers = (io, socket) => {
         return;
       }
 
-      if (receiver.blockedUsers.includes(userId)) {
+      const isBlocked = receiver.blockedUsers && receiver.blockedUsers.some(
+        (id) => id.toString() === userId.toString()
+      );
+      if (isBlocked) {
         if (typeof callback === 'function') callback({ success: false, message: 'User is unavailable' });
+        return;
+      }
+
+      // Check if receiver is actively connected via socket
+      const receiverRoom = io.sockets.adapter.rooms.get(`user:${receiverId}`);
+      if (!receiverRoom || receiverRoom.size === 0) {
+        if (typeof callback === 'function') {
+          callback({ success: false, message: `${receiver.displayName || 'User'} is currently offline` });
+        }
         return;
       }
 
